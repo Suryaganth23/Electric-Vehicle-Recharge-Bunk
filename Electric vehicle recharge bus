@@ -1,0 +1,273 @@
+import { useState, useEffect } from 'react'
+import { Button } from "/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "/components/ui/card"
+import { Input } from "/components/ui/input"
+import { Label } from "/components/ui/label"
+import { Search, MapPin, Clock, Battery, Zap } from "lucide-react"
+
+type ChargingStation = {
+  id: string
+  name: string
+  address: string
+  phone: string
+  slots: {
+    total: number
+    available: number
+  }
+  location: {
+    lat: number
+    lng: number
+  }
+  rates: {
+    standard: number
+    fast: number
+  }
+  distance: string
+}
+
+export default function EVChargingUser() {
+  const [stations, setStations] = useState<ChargingStation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchLocation, setSearchLocation] = useState('')
+  const [selectedStation, setSelectedStation] = useState<ChargingStation | null>(null)
+
+  // Mock data - in a real app this would come from Firebase
+  useEffect(() => {
+    const mockStations: ChargingStation[] = [
+      {
+        id: '1',
+        name: 'Green Energy Charging Hub',
+        address: '123 Main St, Tech City, TC 12345',
+        phone: '(555) 123-4567',
+        slots: {
+          total: 10,
+          available: 4
+        },
+        location: {
+          lat: 12.9716,
+          lng: 77.5946
+        },
+        rates: {
+          standard: 0.15,
+          fast: 0.25
+        },
+        distance: '0.5 miles'
+      },
+      {
+        id: '2',
+        name: 'EcoPower Station',
+        address: '456 Oak Ave, Green Valley, GV 67890',
+        phone: '(555) 987-6543',
+        slots: {
+          total: 8,
+          available: 2
+        },
+        location: {
+          lat: 12.9352,
+          lng: 77.6245
+        },
+        rates: {
+          standard: 0.12,
+          fast: 0.22
+        },
+        distance: '1.2 miles'
+      },
+      {
+        id: '3',
+        name: 'VoltCharge Center',
+        address: '789 Pine Rd, Solar Town, ST 54321',
+        phone: '(555) 456-7890',
+        slots: {
+          total: 12,
+          available: 7
+        },
+        location: {
+          lat: 12.9851,
+          lng: 77.5533
+        },
+        rates: {
+          standard: 0.18,
+          fast: 0.28
+        },
+        distance: '2.1 miles'
+      }
+    ]
+    
+    setTimeout(() => {
+      setStations(mockStations)
+      setLoading(false)
+    }, 1000)
+  }, [])
+
+  const filteredStations = stations.filter(station =>
+    station.name.toLowerCase().includes(searchLocation.toLowerCase()) ||
+    station.address.toLowerCase().includes(searchLocation.toLowerCase())
+  )
+
+  const handleBookSlot = (stationId: string) => {
+    // In a real app, this would connect to Firebase to book the slot
+    alert(`Booking slot at station ${stationId}`)
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <Zap className="h-6 w-6 mr-2 text-green-600" />
+            EV Charge Finder
+          </h1>
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" size="sm">
+              Login
+            </Button>
+            <Button size="sm">
+              Register
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Find Nearby Charging Stations</h2>
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search by location or station name"
+              className="pl-10"
+              value={searchLocation}
+              onChange={(e) => setSearchLocation(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+              {filteredStations.length > 0 ? (
+                filteredStations.map(station => (
+                  <Card 
+                    key={station.id} 
+                    className={`cursor-pointer hover:border-green-500 transition-colors ${selectedStation?.id === station.id ? 'border-green-500' : ''}`}
+                    onClick={() => setSelectedStation(station)}
+                  >
+                    <CardHeader>
+                      <CardTitle className="flex justify-between items-start">
+                        <span>{station.name}</span>
+                        <span className={`text-sm px-2 py-1 rounded-full ${station.slots.available > 2 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                          {station.slots.available} slots available
+                        </span>
+                      </CardTitle>
+                      <CardDescription className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        {station.address}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 mr-2 text-gray-500" />
+                          <div>
+                            <p className="text-sm text-gray-500">Distance</p>
+                            <p className="font-medium">{station.distance}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <Battery className="h-4 w-4 mr-2 text-gray-500" />
+                          <div>
+                            <p className="text-sm text-gray-500">Rates</p>
+                            <p className="font-medium">${station.rates.standard}/kWh (standard)</p>
+                            <p className="font-medium">${station.rates.fast}/kWh (fast)</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>No stations found</CardTitle>
+                    <CardDescription>Try adjusting your search criteria</CardDescription>
+                  </CardHeader>
+                </Card>
+              )}
+            </div>
+
+            <div className="lg:col-span-1">
+              {selectedStation ? (
+                <Card className="sticky top-4">
+                  <CardHeader>
+                    <CardTitle>Station Details</CardTitle>
+                    <CardDescription>{selectedStation.name}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label>Address</Label>
+                      <p className="mt-1 flex items-center">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        {selectedStation.address}
+                      </p>
+                    </div>
+                    <div>
+                      <Label>Contact</Label>
+                      <p className="mt-1">{selectedStation.phone}</p>
+                    </div>
+                    <div>
+                      <Label>Availability</Label>
+                      <div className="mt-1">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="bg-green-600 h-2.5 rounded-full" 
+                            style={{width: `${(selectedStation.slots.available / selectedStation.slots.total) * 100}%`}}>
+                          </div>
+                        </div>
+                        <p className="text-sm mt-1">
+                          {selectedStation.slots.available} of {selectedStation.slots.total} slots available
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Rates</Label>
+                      <div className="mt-1 grid grid-cols-2 gap-2">
+                        <div className="bg-gray-100 p-2 rounded">
+                          <p className="text-sm text-gray-500">Standard</p>
+                          <p className="font-medium">${selectedStation.rates.standard}/kWh</p>
+                        </div>
+                        <div className="bg-gray-100 p-2 rounded">
+                          <p className="text-sm text-gray-500">Fast</p>
+                          <p className="font-medium">${selectedStation.rates.fast}/kWh</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pt-4">
+                      <Button 
+                        className="w-full" 
+                        onClick={() => handleBookSlot(selectedStation.id)}
+                        disabled={selectedStation.slots.available === 0}
+                      >
+                        {selectedStation.slots.available > 0 ? 'Book Charging Slot' : 'No Slots Available'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Select a station</CardTitle>
+                    <CardDescription>Click on a station to view details and book</CardDescription>
+                  </CardHeader>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}
